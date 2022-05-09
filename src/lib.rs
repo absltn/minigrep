@@ -1,6 +1,7 @@
 use std::env;
 use std::error::Error;
 use std::fs;
+use ansi_term::Colour::Green;
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.filename)?;
@@ -11,14 +12,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     else {
          search_case_insensitive(&config.query, &contents)  
     };
-  
+    
     for line in results {
-            println!("{}", line);
-    }
+        
+        let colorized_start = line.find(&config.query.to_lowercase()).unwrap();
+        let colorized_stop = colorized_start + config.query.len();
+
+        println!("{}{}{}", &line[..colorized_start],
+        Green.bold().paint(&config.query),
+        &line[colorized_stop..]);}
 
     Ok(())
 }
-
 
 pub struct Config{
     pub query: String,
@@ -34,10 +39,20 @@ impl Config {
             return Err("Not enough arguments");
         }
 
+        if args.len() == 4 && args[3] == "-h" {
+            println!("
+    This app searches outputs lines of text file,
+    containing the first match to a query.
+    Pass args as follows: minigrep.exe query path-to-file [i]
+    Where [i] is a flag for case-insensitive search.
+    You can also use ENV variable CASE_INSENSITIVE
+    To allow case-insensitive search by default.\n");
+        }
+
         let query = args[1].clone();
         let filename = args[2].clone();
 
-        if !env::var("CASE_INSENSITIVE").is_err() || args.len() == 4{
+        if !env::var("CASE_INSENSITIVE").is_err() || (args.len() == 4 && args[3] == "i") {
 
             let case_sensitive = false;
             Ok(Config {
