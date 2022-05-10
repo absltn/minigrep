@@ -18,20 +18,22 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         if config.case_sensitive == true {
             
             let colorized_start = line.find(&config.query).unwrap();
-        let colorized_stop = colorized_start + config.query.len();
+            let colorized_stop = colorized_start + config.query.len();
 
-        println!("{}{}{}", &line[..colorized_start],
-        Green.bold().paint(&config.query),
-        &line[colorized_stop..]);} 
+            println!("{}{}{}", &line[..colorized_start],
+            Green.bold().paint(&config.query),
+            &line[colorized_stop..]);
+        } 
         
 
         else {
             let colorized_start = line.to_lowercase().find(&config.query.to_lowercase()).unwrap();
-        let colorized_stop = colorized_start + config.query.len();
+            let colorized_stop = colorized_start + config.query.len();
 
-        println!("{}{}{}", &line[..colorized_start],
-        Green.bold().paint(&config.query.to_lowercase()),
-        &line[colorized_stop..]);}
+            println!("{}{}{}", &line[..colorized_start],
+            Green.bold().paint(&line[colorized_start..colorized_stop]),
+            &line[colorized_stop..]);
+        }
 
         }
         
