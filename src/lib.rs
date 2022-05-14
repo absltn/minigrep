@@ -14,28 +14,59 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     };
     
     for line in results {
+        
+        let query_len = config.query.len();
 
         if config.case_sensitive == true {
             
-            let colorized_start = line.find(&config.query).unwrap();
-            let colorized_stop = colorized_start + config.query.len();
+            let (all_matches, _):(Vec<_>,Vec<_>) = line.match_indices(&config.query).unzip();
+            let size = all_matches.len();
 
-            println!("{}{}{}", &line[..colorized_start],
-            Green.bold().paint(&config.query),
-            &line[colorized_stop..]);
-        } 
-        
+            let mut i = 0;
 
-        else {
-            let colorized_start = line.to_lowercase().find(&config.query.to_lowercase()).unwrap();
-            let colorized_stop = colorized_start + config.query.len();
+            while i < line.len() {
+                if all_matches.contains(&i) {
 
-            println!("{}{}{}", &line[..colorized_start],
-            Green.bold().paint(&line[colorized_start..colorized_stop]),
-            &line[colorized_stop..]);
+                    let end = i+query_len;
+                    print!("{}", Green.bold().paint(&line[i..end]));
+                    i = end;
+                    }
+                else { 
+                    print!("{}",&line[i..i+1]); 
+                    i += 1; 
+                }
+                    
             }
-        }
+            println!("");
+        }   
         
+        else {
+            let (all_matches, _):(Vec<_>,Vec<_>) = line.to_lowercase().match_indices(
+                &config.query.to_lowercase()).unzip();
+            let size = all_matches.len();
+
+            let mut i = 0;
+
+            while i < line.len() {
+                if all_matches.contains(&i) {
+
+                    let end = i+query_len;
+                    print!("{}", Green.bold().paint(&line[i..end]));
+                    i = end;
+                    }
+                else { 
+                    print!("{}",&line[i..i+1]); 
+                    i += 1; 
+                }
+                    
+            }
+            println!("");
+
+
+        }
+
+    }           
+         
     Ok(())
 }
 
