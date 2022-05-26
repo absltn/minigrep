@@ -194,7 +194,8 @@ fn search_case_insensitive<'a> (query: &str, contents: &'a str) -> Vec<&'a str> 
 
 
 fn get_pipe_output() -> String {
-    let mut stdin = io::stdin();
+    let stdin = io::stdin();
+    let mut stdin = stdin.lock();
     let mut line = String::new();
 
     while let Ok(n_bytes) = stdin.read_to_string(&mut line) {
