@@ -1,17 +1,16 @@
 use std::{io::{self, Read},env, fs};
 use std::error::Error;
 use ansi_term::Colour::Green;
+use atty::Stream;
 
 /*
-* The use of this console program is as follows
+* The use of this console program is as follows:
 * 
 * minigrep QUERY FILENAME MODIFIER
 * 
 * OR
 *
 * A | minigrep QUERY MODIFIER
-*
-*
 */
 
 
@@ -39,8 +38,16 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
                 if all_matches.contains(&i) {
 
                     let end = i+query_len;
-                    print!("{}", Green.bold().paint(&line[i..end]));
+                    
+                    if atty::is(Stream::Stdout){
+                        print!("{}", Green.bold().paint(&line[i..end]));
+                    }
+                    else {
+                        print!("{}", &line[i..end]);
+                    }          
+                         
                     i = end;
+                    
                     }
                 else { 
                     print!("{}",&line[i..i+1]); 
@@ -61,7 +68,13 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
                 if all_matches.contains(&i) {
 
                     let end = i+query_len;
-                    print!("{}", Green.bold().paint(&line[i..end]));
+                    if atty::is(Stream::Stdout){
+                        print!("{}", Green.bold().paint(&line[i..end]));
+                    }
+                    else {
+                        print!("{}", &line[i..end]);
+                    }
+                    
                     i = end;
                     }
                 else { 
