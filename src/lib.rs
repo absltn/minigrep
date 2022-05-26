@@ -1,10 +1,22 @@
-use std::env;
+use std::{io::{self, Read},env, fs, process::ChildStdout};
 use std::error::Error;
-use std::fs;
 use ansi_term::Colour::Green;
 
+/*
+* The use of this console program is as follows
+* 
+* minigrep QUERY FILENAME MODIFIER
+* 
+* OR
+*
+* A | minigrep QUERY MODIFIER
+*
+*
+*/
+
+
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.filename)?;
+    let contents = fs::read_to_string(config.source).unwrap_or(get_pipe_output());
 
     let results = if config.case_sensitive {
         search(&config.query, &contents) 
@@ -20,7 +32,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         if config.case_sensitive == true {
             
             let (all_matches, _):(Vec<_>,Vec<_>) = line.match_indices(&config.query).unzip();
-            let size = all_matches.len();
 
             let mut i = 0;
 
@@ -43,7 +54,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         else {
             let (all_matches, _):(Vec<_>,Vec<_>) = line.to_lowercase().match_indices(
                 &config.query.to_lowercase()).unzip();
-            let size = all_matches.len();
 
             let mut i = 0;
 
@@ -72,7 +82,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
 pub struct Config{
     pub query: String,
-    pub filename: String,
+    pub source: String,
     pub case_sensitive: bool,
     pub exit: bool,
 }
@@ -90,25 +100,40 @@ impl Config {
 
         let query = match args.next() {
             Some(arg) => arg,
-            None => return Err("Didn't get a query string"),
+            None => return Err("Didn't get query string"),
         };
 
-        let filename = match args.next() {
+        let source = match args.next() {
             Some(arg) => arg,
-            None => return Err("Didn't get a file name"),
+            None => String::from(""),
         };
 
         let count:Count = match args.next() {
             Some(arg) => Count{modifier: arg, count: 4},
-            None => Count{modifier: String::new(), count: 3},
+            None => {
+                if source == "-i" || source == "-h" {
+                    Count{modifier: source.clone(), count: 4}
+                }
+                else {
+                    Count{modifier: String::new(), count: 3}
+                }
 
+            }         
+            
         };
 
         if count.modifier == "-h" {
             println!("
     This app searches and outputs lines of text file,
     containing the first match to a query.
-    Pass args as follows: minigrep.exe query path-to-file [i]
+    Pass args as follows: 
+    
+    minigrep QUERY FILENAME [i]
+    
+    OR
+
+    A | minigrep QUERY [i]
+    
     Where [i] is a flag for case-insensitive search.
     You can also use ENV variable CASE_INSENSITIVE
     To allow case-insensitive search by default.\n");
@@ -116,7 +141,7 @@ impl Config {
         let exit = true;
         Ok(Config {
             query, 
-            filename, 
+            source, 
             case_sensitive,
             exit,
             })
@@ -129,7 +154,7 @@ impl Config {
                 let exit = false;
                 Ok(Config {
                     query, 
-                    filename, 
+                    source, 
                     case_sensitive,
                     exit,
                 })
@@ -140,7 +165,7 @@ impl Config {
                 let exit = false;
                 Ok(Config {
                     query, 
-                    filename, 
+                    source, 
                     case_sensitive,
                     exit,
                 })
@@ -151,26 +176,33 @@ impl Config {
 
 
 fn search<'a> (query: &str, contents: &'a str) -> Vec<&'a str> {
+    
     contents
         .lines()
         .filter(|line| line.contains(query))
         .collect()
 }
 
+
 fn search_case_insensitive<'a> (query: &str, contents: &'a str) -> Vec<&'a str> { 
     
-    let mut result: Vec<&'a str> = Vec::new();
-    let query = query.to_lowercase();
+    contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .collect()
+}
 
-    for line in contents.lines() {
 
-        if line.to_lowercase().contains(&query) {
-            result.push(line)
-        } 
-                
+fn get_pipe_output() -> String {
+    let mut stdin = io::stdin();
+    let mut line = String::new();
+
+    while let Ok(n_bytes) = stdin.read_to_string(&mut line) {
+        if n_bytes == 0 { break }
+        
     }
-
-    result
+    
+    line
 }
 
 
