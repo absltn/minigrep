@@ -1,4 +1,4 @@
-use std::{io::{self, Read},env, fs, process::ChildStdout};
+use std::{io::{self, Read},env, fs};
 use std::error::Error;
 use ansi_term::Colour::Green;
 
@@ -133,7 +133,7 @@ impl Config {
     OR
 
     A | minigrep QUERY [i]
-    
+
     Where [i] is a flag for case-insensitive search.
     You can also use ENV variable CASE_INSENSITIVE
     To allow case-insensitive search by default.\n");
